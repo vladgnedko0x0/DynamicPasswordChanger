@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace DynamicPasswordService_Uploader
     {
         static void Main(string[] args)
         {
-            // Проверяем, был ли уже установлен наш сервис
+            // Check if our service is already installed
             ServiceController[] services = ServiceController.GetServices();
             bool serviceExists = false;
             foreach (ServiceController service in services)
@@ -24,20 +24,20 @@ namespace DynamicPasswordService_Uploader
                 }
             }
 
-            // Если сервис не был установлен, то создаем его
+            // If the service is not installed, create it
             if (!serviceExists)
             {
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                 path += "\\Dynamic\\DynamicPasswordService.exe";
+                path += "\\Dynamic\\DynamicPasswordService.exe";
                 ProcessStartInfo processInfo = new ProcessStartInfo();
                 processInfo.FileName = "sc";
-                processInfo.Arguments = "create \"Dynamic Password Changer\" binPath= \"" + path + "\" start= auto"; // Запускать службу автоматически
-                processInfo.Verb = "runas"; // Запустить от имени администратора
+                processInfo.Arguments = "create \"Dynamic Password Changer\" binPath= \"" + path + "\" start= auto"; // Set service to start automatically
+                processInfo.Verb = "runas"; // Run as administrator
 
                 ProcessStartInfo processInfoStart = new ProcessStartInfo();
                 processInfoStart.FileName = "sc";
-                processInfoStart.Arguments = "start \"Dynamic Password Changer\""; // Запускать службу автоматически
-                processInfoStart.Verb = "runas"; // Запустить от имени администратора
+                processInfoStart.Arguments = "start \"Dynamic Password Changer\""; // Start the service
+                processInfoStart.Verb = "runas"; // Run as administrator
                 try
                 {
                     Process.Start(processInfo);
