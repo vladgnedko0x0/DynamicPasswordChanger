@@ -5,37 +5,37 @@ class Program
 {
     static void Main(string[] args)
     {
-        // Укажите имя пользователя, для которого нужно изменить пароль
+        // Specify the username for which you want to change the password
         string username = "test";
 
-        // Установите новый пароль на текущую дату в формате "yyyyMMdd" (например, "20240527" для 27 мая 2024 года)
+        // Set the new password to the current date in the format "yyyyMMdd" (e.g., "20240527" for May 27, 2024)
         string newPassword = DateTime.Now.ToString("yyyyMMdd");
 
         try
         {
-            // Создание контекста принципала
+            // Creating a principal context
             using (PrincipalContext context = new PrincipalContext(ContextType.Machine))
             {
-                // Поиск пользователя
+                // Searching for the user
                 UserPrincipal user = UserPrincipal.FindByIdentity(context, username);
 
                 if (user != null)
                 {
-                    // Установка нового пароля
+                    // Setting the new password
                     user.SetPassword(newPassword);
                     user.Save();
 
-                    Console.WriteLine($"Пароль для пользователя {username} успешно изменен на текущую дату.");
+                    Console.WriteLine($"Password for user {username} successfully changed to the current date.");
                 }
                 else
                 {
-                    Console.WriteLine("Пользователь не найден.");
+                    Console.WriteLine("User not found.");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Ошибка при изменении пароля: " + ex.Message);
+            Console.WriteLine("Error changing password: " + ex.Message);
         }
     }
 }
