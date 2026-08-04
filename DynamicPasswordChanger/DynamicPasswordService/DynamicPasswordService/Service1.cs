@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+// FIX: Password change logic moved directly into OnStart.
+// The original code launched DynamicPassword.exe with UseShellExecute = true,
+// which fails in Windows Session 0 (the non-interactive service session).
+// Running as SYSTEM already has the privileges needed to call SetPassword —
+// no subprocess or runas is required.
+
+using System;
+using System.Configuration;
+using System.DirectoryServices.AccountManagement;
 using System.Diagnostics;
-using System.Linq;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DynamicPasswordService
 {
@@ -19,42 +21,52 @@ namespace DynamicPasswordService
 
         protected override void OnStart(string[] args)
         {
-            // Укажите путь к вашему исполняемому файлу
-            string filePath=Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-             filePath += "\\Dynamic\\DynamicPassword.exe";
-
-            // Создайте новый процесс
-            ProcessStartInfo processInfo = new ProcessStartInfo();
-            processInfo.FileName = filePath;
-            processInfo.UseShellExecute = true;
-            processInfo.Verb = "runas"; // Запустить от имени администратора
-
             try
             {
-                // Запустите процесс
-                Process.Start(processInfo);
+                // FIX: Read username from App.config instead of hardcoding "test".
+                // Add <add key="TargetUsername" value="YourWindowsUsername"/> to App.config.
+                string username = ConfigurationManager.AppSettings["TargetUsername"]
+                                  ?? Environment.UserName;
+
+                // Password formula: current date as yyyyMMdd (e.g. "20240908")
+                // The user always knows the password = today's date.
+                string newPassword = DateTime.Now.ToString("yyyyMMdd");
+
+                using (PrincipalContext context = new PrincipalContext(ContextType.Machine))
+                {
+                    UserPrincipal user = UserPrincipal.FindByIdentity(context, username);
+
+                    if (user != null)
+                    {
+                        user.SetPassword(newPassword);
+                        user.Save();
+
+                        EventLog.WriteEntry(
+                            "DynamicPasswordChanger",
+                            $"Password for '{username}' changed successfully.",
+                            EventLogEntryType.Information);
+                    }
+                    else
+                    {
+                        EventLog.WriteEntry(
+                            "DynamicPasswordChanger",
+                            $"User '{username}' not found. Password was not changed.",
+                            EventLogEntryType.Warning);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // Обработка ошибок
-                Console.WriteLine($"An error occurred while starting the process: {ex.Message}");
+                EventLog.WriteEntry(
+                    "DynamicPasswordChanger",
+                    $"Failed to change password: {ex.Message}",
+                    EventLogEntryType.Error);
             }
         }
 
         protected override void OnStop()
         {
-            string processName = "DynamicPassword";
-
-            // Попытайтесь найти процесс по его имени
-            Process[] processes = Process.GetProcessesByName(processName);
-            if (processes.Length > 0)
-            {
-                // Завершите все найденные процессы
-                foreach (var process in processes)
-                {
-                    process.Kill();
-                }
-            }
+            // Nothing to clean up — no subprocess is launched anymore.
         }
     }
 }
