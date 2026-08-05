@@ -8,7 +8,12 @@ using System;
 using System.Configuration;
 using System.DirectoryServices.AccountManagement;
 using System.Diagnostics;
+// Upewnij się, że projekt ma dodane odwołanie do zestawu System.DirectoryServices.AccountManagement.dll.
+// W Visual Studio: kliknij prawym przyciskiem myszy na "References" → "Add Reference..." → "Assemblies" → "Framework" → zaznacz "System.DirectoryServices.AccountManagement" → OK.
+
+// Poprawka nie wymaga zmian w kodzie źródłowym, ale wymaga dodania odwołania do odpowiedniego zestawu (DLL) w projekcie.
 using System.ServiceProcess;
+
 
 namespace DynamicPasswordService
 {
